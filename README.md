@@ -14,12 +14,14 @@ Hvor rödd er með 364 hljóðskrár (mp3): öll skor frá 0 til 180, einfalda, 
 ## Það sem þarf
 
 - Autodarts-borð og aðgang að [play.autodarts.io](https://play.autodarts.io)
-- Tölvu sem keyrir **darts-hub** (Windows, Linux eða Mac). Þetta má vera sama tölvan og keyrir Autodarts.
+- Tölvu sem keyrir **darts-hub** (Windows, Linux, t.d. Raspberry Pi, eða Mac). Þetta má vera sama tölvan og keyrir Autodarts.
+
+Leiðbeiningarnar eru í tveimur hlutum: [Windows](#uppsetning-á-windows) og [Linux / Raspberry Pi](#uppsetning-á-linux--raspberry-pi).
 - Hátalara eða heyrnartól við þá tölvu, eða síma/spjaldtölvu ef notaður er vef-callerinn (sjá neðar)
 
 ---
 
-## Uppsetning skref fyrir skref
+## Uppsetning á Windows
 
 ### 1. Settu upp darts-hub (ef þú ert ekki með það)
 
@@ -28,8 +30,6 @@ Hvor rödd er með 364 hljóðskrár (mp3): öll skor frá 0 til 180, einfalda, 
 2. Búðu til möppuna `darts-hub` í heimamöppunni þinni (t.d. `C:\Users\<notandi>\darts-hub`) og afþjappaðu zip-skrána þangað.
 3. Tvísmelltu á `darts-hub` til að ræsa forritið.
 4. Settu upp **darts-caller** inni í darts-hub og fylltu inn Autodarts-netfang, lykilorð og Board ID.
-
-> Á Linux þarf líka að gera skrána keyranlega: `chmod +x ~/darts-hub/darts-hub`
 
 ### 2. Sæktu íslensku raddirnar
 
@@ -85,6 +85,103 @@ Ef þú notar enskar raddir líka og vilt að íslensku raddirnar séu valdar af
 ### 5. Endurræstu og prófaðu
 
 Endurræstu darts-caller í darts-hub. Við ræsingu birtir hann lista yfir uppsettar raddir og þar eiga íslensku raddirnar að sjást. Byrjaðu leik á Autodarts og hentu einni pílu.
+
+---
+
+## Uppsetning á Linux / Raspberry Pi
+
+Þetta á við Ubuntu, Debian, Raspberry Pi OS og sambærilegar dreifingar. darts-hub styður x64, ARM og ARM64, svo það keyrir líka á Raspberry Pi.
+
+### 1. Settu upp darts-hub (ef þú ert ekki með það)
+
+**Auðveldast:** Keyrðu uppsetningarskriftu darts-hub. Hún sækir nýjustu útgáfuna og stillir hana til að ræsast sjálfkrafa:
+
+```bash
+sudo apt install curl
+bash <(curl -sL get-add.arnes-design.de)
+```
+
+**Eða handvirkt:**
+
+1. Sæktu zip-skrána fyrir þinn örgjörva á <https://github.com/lbormann/darts-hub/releases/latest> (ARM64 fyrir Raspberry Pi 4/5 með 64-bita stýrikerfi).
+2. Afþjappaðu hana í `~/darts-hub` og gerðu skrána keyranlega:
+
+   ```bash
+   mkdir -p ~/darts-hub
+   unzip darts-hub-*.zip -d ~/darts-hub
+   chmod +x ~/darts-hub/darts-hub
+   ~/darts-hub/darts-hub
+   ```
+
+Settu svo upp **darts-caller** inni í darts-hub og fylltu inn Autodarts-netfang, lykilorð og Board ID.
+
+### 2. Sæktu raddirnar og settu þær í media-möppu
+
+Með git:
+
+```bash
+sudo apt install git
+git clone https://github.com/bippi/dart-caller-isk.git ~/dart-caller-isk
+mkdir -p ~/darts-voices
+cp -r ~/dart-caller-isk/is-IS-* ~/darts-voices/
+```
+
+Eða án git:
+
+```bash
+sudo apt install wget unzip
+cd ~
+wget https://github.com/bippi/dart-caller-isk/archive/refs/heads/main.zip -O dart-caller-isk.zip
+unzip dart-caller-isk.zip
+mkdir -p ~/darts-voices
+cp -r ~/dart-caller-isk-main/is-IS-* ~/darts-voices/
+```
+
+Athugaðu að allt sé á sínum stað:
+
+```bash
+ls ~/darts-voices
+# is-IS-Gudrun-Female-v1  is-IS-Gunnar-Male-v1
+ls ~/darts-voices/is-IS-Gudrun-Female-v1 | wc -l
+# 364
+```
+
+### 3. Stilltu darts-caller
+
+Stillingarnar eru þær sömu og á Windows (sjá [töfluna að ofan](#4-stilltu-darts-caller)). Munurinn er slóðin í `-M`:
+
+| Stilling | Gildi |
+|---|---|
+| `-M` / `--media_path` | `/home/<notandi>/darts-voices` |
+| `-C` / `--caller` | `is-IS-Gudrun-Female-v1` eða `is-IS-Gunnar-Male-v1` |
+
+Notaðu **heila slóð**, ekki `~/darts-voices`, því `~` er ekki alltaf túlkað rétt. Rétta slóð færðu með:
+
+```bash
+echo ~/darts-voices
+```
+
+### 4. Hljóð
+
+Ef ekkert heyrist á Linux er algengast að hljóðið fari á rangt úttak.
+
+- Prófaðu hátalarana: `speaker-test -t wav -c 2` (Ctrl+C til að stöðva)
+- Stilltu hljóðstyrk og úttak: `alsamixer`, eða hljóðstillingar skjáborðsins
+- **Raspberry Pi:** Veldu úttak (HDMI, heyrnartólstengi eða USB/Bluetooth) með `sudo raspi-config` → *System Options* → *Audio*, eða með því að hægrismella á hátalaratáknið efst í horninu.
+- Ef Pi-inn er skjálaus (headless) og ekki tengdur við hátalara er gott að nota [vef-callerinn](#vef-caller-sími--spjaldtölva) í síma eða spjaldtölvu í staðinn.
+
+### 5. Uppfæra raddirnar síðar
+
+Ef þú notaðir git:
+
+```bash
+cd ~/dart-caller-isk && git pull
+cp -r ~/dart-caller-isk/is-IS-* ~/darts-voices/
+```
+
+Endurræstu svo darts-caller.
+
+> Á Linux skipta há- og lágstafir máli í skráarheitum. Skrá með nafni leikmanns verður að heita nákvæmlega eins og notandanafnið á Autodarts, með lágstöfum, t.d. `jon.mp3`, ekki `Jon.mp3`.
 
 ---
 
